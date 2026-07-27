@@ -1,16 +1,23 @@
-let nombre="Emiliano";
-let apellido="Uribe"
+let producto = "";
 
-let edad= parseInt(prompt("Ingresa tu edad"))
-console.log (typeof edad)
+while (producto !== "salir") {
 
-console.log (nombre + " " + apellido)
+    producto = prompt(
+        "¿Qué producto desea consultar? Ingrese su nombre para conocer sus funciones.\n" +
+        "Escriba 'salir' para finalizar."
+    );
 
-console.log (edad)
+    producto = producto.toLowerCase();
 
-console.log (2026 - edad)
-
-console.log (2026 - parseInt(edad))
-
-let resultado= 2026 - edad 
-console.log ("Emiliano tiene " + edad + " " + "años porque nació en el año " + resultado )
+    if (producto === "lavaloza") {
+        console.log("El Lavaloza elimina la grasa y cuida las manos.");
+    } else if (producto === "detergente") {
+        console.log("El Detergente es ideal para lavar ropa.");
+    } else if (producto === "desengrasante") {
+        console.log("El Desengrasante elimina grasa pesada.");
+    } else if (producto === "salir") {
+        console.log("No hay más productos.");
+    } else {
+        console.log("Ese producto no existe.");
+    }
+}
