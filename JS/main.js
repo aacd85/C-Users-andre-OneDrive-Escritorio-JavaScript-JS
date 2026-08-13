@@ -1,87 +1,140 @@
+// Clase Producto
+class Producto {
+    constructor(id, nombre, precio, stock) {
+        this.id = id;
+        this.nombre = nombre;
+        this.precio = precio;
+        this.stock = stock;
+    }
+
+    // Método para vender productos
+    vender(cantidad) {
+        if (cantidad <= 0) {
+            return "La cantidad debe ser mayor a 0.";
+        }
+
+        if (cantidad <= this.stock) {
+            this.stock -= cantidad;
+
+            return `Venta realizada.
+Producto: ${this.nombre}
+Cantidad vendida: ${cantidad}
+Stock disponible: ${this.stock}`;
+        } else {
+            return `No hay suficiente stock de ${this.nombre}.
+Stock disponible: ${this.stock}`;
+        }
+    }
+
+    // Mostrar información del producto
+    mostrarInformacion() {
+        return `ID: ${this.id}
+Producto: ${this.nombre}
+Precio: $${this.precio}
+Stock: ${this.stock}`;
+    }
+}
+
+
+// Creo tres productos usando new
+
+let detergente = new Producto(
+    1,
+    "Detergente",
+    12000,
+    20
+);
+
+let desinfectante = new Producto(
+    2,
+    "Desinfectante",
+    15000,
+    15
+);
+
+let limpiavidrios = new Producto(
+    3,
+    "Limpiavidrios",
+    10000,
+    10
+);
+
+
+// Guardo los productos en un array
+
 let productos = [
-    'detergente',
-    'desinfectante',
-    'limpiavidrios'
+    detergente,
+    desinfectante,
+    limpiavidrios
 ];
 
-console.log('Lista original:');
-console.log(productos);
 
+// Mostrar los productos disponibles
 
-// 1. PUSH
-// Agrego un producto al final de la lista
-
-productos.push('blanqueador');
-
-console.log('Agrego blanqueador (con push):');
-console.log(productos);
-
-
-// 2. POP
-// Elimino el último producto de la lista
-
-productos.pop();
-
-console.log('Elimino el último producto:');
-console.log(productos);
-
-
-// 3. UNSHIFT
-// Agrego un producto al inicio de la lista
-
-productos.unshift('ambientador');
-
-console.log('Agrego ambientador al inicio (con unshift):');
-console.log(productos);
-
-
-// 4. SHIFT
-// Elimino el primer producto de la lista
-
-productos.shift();
-
-console.log('Elimino el primer producto (con shift):');
-console.log(productos);
-
-
-// 5. ACCESO Y MODIFICACIÓN POR ÍNDICE
-// Modifico el producto que se encuentra en la posición 1
-
-productos[1] = 'jabon liquido';
-
-console.log('Modifico el producto en el índice 1:');
-console.log(productos);
-
-
-// 6. FOR...OF
-// Recorremos todos los productos de la lista
-
-console.log('Productos disponibles (for-of):');
+console.log("PRODUCTOS DISPONIBLES");
 
 for (let producto of productos) {
-    console.log(producto);
+    console.log(producto.mostrarInformacion());
 }
 
 
-// 7. INCLUDES
-// Producto existe
+// Interacción con el usuario
 
-let productoBuscado = 'detergente';
+let nombreProducto = prompt(
+    "¿Qué producto deseas comprar?\n\n" +
+    "1. Detergente\n" +
+    "2. Desinfectante\n" +
+    "3. Limpiavidrios"
+);
 
-if (productos.includes(productoBuscado)) {
-    console.log('El producto ' + productoBuscado + ' está disponible.');
+
+let productoSeleccionado;
+
+if (nombreProducto === "1") {
+    productoSeleccionado = detergente;
+} else if (nombreProducto === "2") {
+    productoSeleccionado = desinfectante;
+} else if (nombreProducto === "3") {
+    productoSeleccionado = limpiavidrios;
 } else {
-    console.log('El producto ' + productoBuscado + ' no está disponible.');
+    alert("Opción no válida.");
 }
 
 
-// 8. INDEXOF
-// Posición de un producto
+// Si seleccionó un producto, preguntamos la cantidad
 
-let posicion = productos.indexOf('REMOVEDOR');
+if (productoSeleccionado) {
 
-if (posicion !== -1) {
-    console.log('REMOVEDOR se encuentra en la posición ' + posicion);
-} else {
-    console.log('REMOVEDOR no se encuentra en la lista.');
+    let cantidad = Number(
+        prompt(
+            `Has seleccionado ${productoSeleccionado.nombre}.\n\n` +
+            `Precio: $${productoSeleccionado.precio}\n` +
+            `Stock disponible: ${productoSeleccionado.stock}\n\n` +
+            "¿Cuántas unidades deseas comprar?"
+        )
+    );
+
+
+    let confirmar = confirm(
+        `¿Confirmas la compra de ${cantidad} ${productoSeleccionado.nombre}?`
+    );
+
+
+    if (confirmar) {
+
+        let resultado = productoSeleccionado.vender(cantidad);
+
+        alert(resultado);
+
+        console.log(resultado);
+
+        console.log("Estado actualizado del producto:");
+        console.log(productoSeleccionado);
+
+    } else {
+
+        alert("Compra cancelada.");
+        console.log("El usuario canceló la compra.");
+
+    }
 }
