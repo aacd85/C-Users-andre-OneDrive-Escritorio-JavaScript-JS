@@ -1,3 +1,4 @@
+
 // Clase Producto
 
 class Producto {
@@ -15,13 +16,40 @@ class Producto {
 }
 
 
-// Array de productos
+// Array inicial de productos
 
-let productos = [
+const productosIniciales = [
     new Producto(1, "Detergente", 12000, 20),
     new Producto(2, "Desinfectante", 15000, 15),
     new Producto(3, "Limpiavidrios", 10000, 10)
 ];
+
+
+// Recuperar productos del localStorage
+
+const productosGuardados = JSON.parse(
+    localStorage.getItem("productos") ?? "null"
+) ?? productosIniciales;
+
+
+// Convertir los objetos recuperados en instancias de Producto
+
+let productos = productosGuardados.map(
+    ({ id, nombre, precio, stock }) =>
+        new Producto(id, nombre, precio, stock)
+);
+
+
+// Función para guardar productos en localStorage
+
+function guardarProductos() {
+
+    localStorage.setItem(
+        "productos",
+        JSON.stringify(productos)
+    );
+
+}
 
 
 // Selección de elementos del DOM
@@ -110,7 +138,7 @@ function renderizarProductos(listaProductos) {
 renderizarProductos(productos);
 
 
-// Evento del formulario
+// Evento del formulario para agregar productos
 
 formulario.addEventListener("submit", (evento) => {
 
@@ -124,6 +152,8 @@ formulario.addEventListener("submit", (evento) => {
     const stock = Number(inputStock.value);
 
 
+    // Validar los campos
+
     if (nombre === "" || precio <= 0 || stock < 0) {
 
         mostrarMensaje(
@@ -135,10 +165,14 @@ formulario.addEventListener("submit", (evento) => {
     }
 
 
+    // Generar un nuevo ID
+
     const nuevoId = productos.length > 0
         ? Math.max(...productos.map(producto => producto.id)) + 1
         : 1;
 
+
+    // Crear el nuevo producto
 
     const nuevoProducto = new Producto(
         nuevoId,
@@ -148,11 +182,22 @@ formulario.addEventListener("submit", (evento) => {
     );
 
 
+    // Agregar producto al array
+
     productos.push(nuevoProducto);
 
 
+    // Guardar los cambios en localStorage
+
+    guardarProductos();
+
+
+    // Actualizar la pantalla
+
     renderizarProductos(productos);
 
+
+    // Mostrar mensaje de confirmación
 
     mostrarMensaje(
         `El producto "${nombre}" fue agregado correctamente.`,
@@ -160,7 +205,10 @@ formulario.addEventListener("submit", (evento) => {
     );
 
 
+    // Limpiar formulario
+
     formulario.reset();
+
 });
 
 
@@ -175,24 +223,44 @@ contenedorProductos.addEventListener("click", (evento) => {
         );
 
 
+        // Buscar el producto que se va a eliminar
+
         const producto = productos.find(
             producto => producto.id === idProducto
         );
 
+
+        // Verificar que el producto exista
+
+        if (!producto) return;
+
+
+        // Eliminar producto del array
 
         productos = productos.filter(
             producto => producto.id !== idProducto
         );
 
 
+        // Guardar los cambios en localStorage
+
+        guardarProductos();
+
+
+        // Actualizar la pantalla
+
         renderizarProductos(productos);
 
 
+        // Mostrar mensaje usando optional chaining
+
         mostrarMensaje(
-            `El producto "${producto.nombre}" fue eliminado.`,
+            `El producto "${producto?.nombre ?? "Producto"}" fue eliminado.`,
             "mensaje-exito"
         );
+
     }
+
 });
 
 
@@ -214,4 +282,5 @@ buscador.addEventListener("input", () => {
 
 
     renderizarProductos(productosFiltrados);
+
 });
