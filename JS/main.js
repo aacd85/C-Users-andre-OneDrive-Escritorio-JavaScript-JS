@@ -25,31 +25,9 @@ const productosIniciales = [
 ];
 
 
-// Recuperar productos del localStorage
+// Array de productos
 
-const productosGuardados = JSON.parse(
-    localStorage.getItem("productos") ?? "null"
-) ?? productosIniciales;
-
-
-// Convertir los objetos recuperados en instancias de Producto
-
-let productos = productosGuardados.map(
-    ({ id, nombre, precio, stock }) =>
-        new Producto(id, nombre, precio, stock)
-);
-
-
-// Función para guardar productos en localStorage
-
-function guardarProductos() {
-
-    localStorage.setItem(
-        "productos",
-        JSON.stringify(productos)
-    );
-
-}
+let productos = [];
 
 
 // Selección de elementos del DOM
@@ -69,9 +47,16 @@ const buscador = document.querySelector("#buscador");
 const mensaje = document.querySelector("#mensaje");
 
 
+// Control del temporizador de mensajes
+
+let temporizadorMensaje;
+
+
 // Función para mostrar mensajes
 
 function mostrarMensaje(texto, tipo) {
+
+    clearTimeout(temporizadorMensaje);
 
     mensaje.innerHTML = `
         <div class="${tipo}">
@@ -79,9 +64,77 @@ function mostrarMensaje(texto, tipo) {
         </div>
     `;
 
-    setTimeout(() => {
+    temporizadorMensaje = setTimeout(() => {
         mensaje.innerHTML = "";
     }, 3000);
+}
+
+
+// Temporizador: mostrar información unos segundos después de ingresar
+
+setTimeout(() => {
+
+    mostrarMensaje(
+        "Recordatorio: revisa los niveles de stock para mantener tus productos actualizados.",
+        "mensaje-info"
+    );
+
+}, 5000);
+
+
+// Función para obtener productos mediante una Promise
+
+function obtenerProductos() {
+
+    return new Promise((resolve, reject) => {
+
+        setTimeout(() => {
+
+            try {
+
+                // Recuperar los datos del localStorage
+
+                const productosGuardados = JSON.parse(
+                    localStorage.getItem("productos") ?? "null"
+                ) ?? productosIniciales;
+
+
+                // Convertir los objetos recuperados en instancias de Producto
+
+                const productosRecuperados = productosGuardados.map(
+                    ({ id, nombre, precio, stock }) =>
+                        new Producto(id, nombre, precio, stock)
+                );
+
+
+                // Resolver la promesa con los productos
+
+                resolve(productosRecuperados);
+
+            } catch (error) {
+
+                // Rechazar la promesa si ocurre un error
+
+                reject(error);
+
+            }
+
+        }, 1500);
+
+    });
+
+}
+
+
+// Función para guardar productos en localStorage
+
+function guardarProductos() {
+
+    localStorage.setItem(
+        "productos",
+        JSON.stringify(productos)
+    );
+
 }
 
 
@@ -130,12 +183,68 @@ function renderizarProductos(listaProductos) {
             </div>
         `;
     });
+
 }
 
 
-// Mostrar productos al cargar la página
+// Función asincrónica para cargar los productos
 
-renderizarProductos(productos);
+async function iniciarSimulador() {
+
+    try {
+
+        // Mostrar mensaje de carga
+
+        mostrarMensaje(
+            "Cargando productos...",
+            "mensaje-info"
+        );
+
+
+        // Esperar la respuesta de la Promise
+
+        productos = await obtenerProductos();
+
+
+        // Mostrar los productos en pantalla
+
+        renderizarProductos(productos);
+
+
+        // Confirmar la carga
+
+        mostrarMensaje(
+            `${productos.length} productos cargados correctamente.`,
+            "mensaje-exito"
+        );
+
+
+    } catch (error) {
+
+        // Capturar y mostrar errores
+
+        console.error("Error al cargar los productos:", error);
+
+        mostrarMensaje(
+            "No se pudieron cargar los productos. Intenta nuevamente.",
+            "mensaje-error"
+        );
+
+
+    } finally {
+
+        // Este bloque se ejecuta siempre
+
+        console.log("Proceso de carga de productos finalizado.");
+
+    }
+
+}
+
+
+// Iniciar el simulador
+
+iniciarSimulador();
 
 
 // Evento del formulario para agregar productos
@@ -144,70 +253,86 @@ formulario.addEventListener("submit", (evento) => {
 
     evento.preventDefault();
 
+    try {
 
-    const nombre = inputNombre.value.trim();
+        const nombre = inputNombre.value.trim();
 
-    const precio = Number(inputPrecio.value);
+        const precio = Number(inputPrecio.value);
 
-    const stock = Number(inputStock.value);
+        const stock = Number(inputStock.value);
 
 
-    // Validar los campos
+        // Validar los campos
 
-    if (nombre === "" || precio <= 0 || stock < 0) {
+        if (nombre === "" || precio <= 0 || stock < 0) {
+
+            mostrarMensaje(
+                "Por favor, completa todos los campos correctamente.",
+                "mensaje-error"
+            );
+
+            return;
+        }
+
+
+        // Generar un nuevo ID
+
+        const nuevoId = productos.length > 0
+            ? Math.max(...productos.map(producto => producto.id)) + 1
+            : 1;
+
+
+        // Crear el nuevo producto
+
+        const nuevoProducto = new Producto(
+            nuevoId,
+            nombre,
+            precio,
+            stock
+        );
+
+
+        // Agregar producto al array
+
+        productos.push(nuevoProducto);
+
+
+        // Guardar los cambios
+
+        guardarProductos();
+
+
+        // Actualizar la pantalla
+
+        renderizarProductos(productos);
+
+
+        // Mostrar mensaje de confirmación
 
         mostrarMensaje(
-            "Por favor, completa todos los campos correctamente.",
+            `El producto "${nombre}" fue agregado correctamente.`,
+            "mensaje-exito"
+        );
+
+
+        // Limpiar formulario
+
+        formulario.reset();
+
+    } catch (error) {
+
+        console.error("Error al agregar el producto:", error);
+
+        mostrarMensaje(
+            "No se pudo agregar el producto. Intenta nuevamente.",
             "mensaje-error"
         );
 
-        return;
+    } finally {
+
+        console.log("Operación de agregar producto finalizada.");
+
     }
-
-
-    // Generar un nuevo ID
-
-    const nuevoId = productos.length > 0
-        ? Math.max(...productos.map(producto => producto.id)) + 1
-        : 1;
-
-
-    // Crear el nuevo producto
-
-    const nuevoProducto = new Producto(
-        nuevoId,
-        nombre,
-        precio,
-        stock
-    );
-
-
-    // Agregar producto al array
-
-    productos.push(nuevoProducto);
-
-
-    // Guardar los cambios en localStorage
-
-    guardarProductos();
-
-
-    // Actualizar la pantalla
-
-    renderizarProductos(productos);
-
-
-    // Mostrar mensaje de confirmación
-
-    mostrarMensaje(
-        `El producto "${nombre}" fue agregado correctamente.`,
-        "mensaje-exito"
-    );
-
-
-    // Limpiar formulario
-
-    formulario.reset();
 
 });
 
@@ -218,46 +343,67 @@ contenedorProductos.addEventListener("click", (evento) => {
 
     if (evento.target.classList.contains("btn-eliminar")) {
 
-        const idProducto = Number(
-            evento.target.dataset.id
-        );
+        try {
+
+            const idProducto = Number(
+                evento.target.dataset.id
+            );
 
 
-        // Buscar el producto que se va a eliminar
+            // Buscar el producto
 
-        const producto = productos.find(
-            producto => producto.id === idProducto
-        );
-
-
-        // Verificar que el producto exista
-
-        if (!producto) return;
+            const producto = productos.find(
+                producto => producto.id === idProducto
+            );
 
 
-        // Eliminar producto del array
+            // Verificar que el producto exista
 
-        productos = productos.filter(
-            producto => producto.id !== idProducto
-        );
+            if (!producto) {
 
+                throw new Error("El producto no existe.");
 
-        // Guardar los cambios en localStorage
-
-        guardarProductos();
+            }
 
 
-        // Actualizar la pantalla
+            // Eliminar producto del array
 
-        renderizarProductos(productos);
+            productos = productos.filter(
+                producto => producto.id !== idProducto
+            );
 
 
-        // Mostrar mensaje usando optional chaining
+            // Guardar los cambios
 
-        mostrarMensaje(
-            `El producto "${producto?.nombre ?? "Producto"}" fue eliminado.`,
-            "mensaje-exito"
-        );
+            guardarProductos();
+
+
+            // Actualizar la pantalla
+
+            renderizarProductos(productos);
+
+
+            // Mostrar mensaje de confirmación
+
+            mostrarMensaje(
+                `El producto "${producto?.nombre ?? "Producto"}" fue eliminado.`,
+                "mensaje-exito"
+            );
+
+        } catch (error) {
+
+            console.error("Error al eliminar el producto:", error);
+
+            mostrarMensaje(
+                "No se pudo procesar la operación. Intenta nuevamente.",
+                "mensaje-error"
+            );
+
+        } finally {
+
+            console.log("Operación de eliminación finalizada.");
+
+        }
 
     }
 
